@@ -1,0 +1,2 @@
+# autoqbid
+Automatic QBID filler
