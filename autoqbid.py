@@ -4,6 +4,11 @@
 # Imports
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException
+from time import sleep
 
 
 class AutoQbid:
@@ -66,8 +71,62 @@ class AutoQbid:
         password_input.send_keys(self.password)
         password_input.send_keys(Keys.RETURN)
 
-    def move_to_month(self):
-        pass
+    def move_to_month(self, year=None, month=None):
+        """
+        Change the month (and year) in the calendar
+        """
+        if year:
+            self.date["year"] = year
+
+        if month:
+            self.date["month"] = month
+
+        months = {
+            "gener": 1,
+            "febrer": 2,
+            "març": 3,
+            "abril": 4,
+            "maig": 5,
+            "juny": 6,
+            "juliol": 7,
+            "agost": 8,
+            "setembre": 9,
+            "octubre": 10,
+            "novembre": 11,
+            "desembre": 12
+        }
+
+        try:
+            WebDriverWait(self.driver, 1).until(
+                ec.frame_to_be_available_and_switch_to_it("contentmain")
+            )
+
+            WebDriverWait(self.driver, 1).until(
+                ec.presence_of_element_located((By.ID, "popupAgenda_calHeader0"))
+            )
+        except TimeoutException:
+            try:
+                self.driver.find_element_by_id("popupAgenda_calHeader0")
+
+            finally:
+                pass
+
+        finally:
+            calendar_date_array = self.driver.find_element_by_id("popupAgenda_calHeader0").text.split(" ")
+            calendar_date = dict({
+                "year": int(calendar_date_array[1]),
+                "month": int(months[calendar_date_array[0].lower()])
+            })
+
+            if not self.date["year"] == calendar_date["year"]:
+                sleep(0.3)
+                year_difference = self.date["year"] - calendar_date["year"]
+                self.driver.execute_script("popupAgenda.shiftAgenda({})".format(year_difference * 12))
+
+            if not self.date["month"] == calendar_date["month"]:
+                sleep(0.3)
+                month_difference = self.date["month"] - calendar_date["month"]
+                self.driver.execute_script("popupAgenda.shiftAgenda({})".format(month_difference))
 
     def open_day_form(self):
         pass
