@@ -44,7 +44,7 @@ class AutoQbid:
             pass
 
     def __del__(self):
-        pass
+        self.driver.close()
 
     def login(self):
         pass
