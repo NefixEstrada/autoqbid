@@ -161,8 +161,41 @@ class AutoQbid:
                 activity_log_url = self.driver.find_element_by_xpath("//*[contains(text(), 'Activitat diària del dossier ')]")
                 activity_log_url.click()
 
-    def fill_activity_log(self):
-        pass
+    def fill_activity_log(self, form_data=None):
+        """
+        Fill the activity log form
+        """
+        if form_data:
+            self.form_data = []
+            for activity in form_data:
+                self.form_data.append({
+                    "activity_id": activity[0],
+                    "hours": activity[1]
+                })
+
+        try:
+            WebDriverWait(self.driver, 10).until(
+                ec.presence_of_element_located((By.ID, "observacionsInutilsAlumneMaiOmplira"))
+            )
+
+        finally:
+            options_to_clean = self.driver.find_elements_by_xpath("//option[@value='0']")
+            for option in options_to_clean:
+                option.click()
+
+            for activity in self.form_data:
+                select = self.driver.find_element_by_id("inp_" + activity["activity_id"])
+                option_to_click = select.find_element_by_xpath("./option[@value='{}']".format(activity["hours"]))
+                option_to_click.click()
+
+            save_button = self.driver.find_element_by_xpath("//*[@title='Emmagatzemar activitat diària']")
+            save_button.click()
+
+            self.driver.switch_to.default_content()
+            self.driver.switch_to.frame(1)
+
+            home_button = self.driver.find_element_by_id("titleInfo").find_element_by_class_name("ModuleLink")
+            home_button.click()
 
     def fill_day(self):
         pass
