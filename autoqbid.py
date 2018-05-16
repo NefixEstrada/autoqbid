@@ -3,15 +3,19 @@
 
 # Imports
 from selenium import webdriver
+from selenium.webdriver.common.keys import Keys
 
 
 class AutoQbid:
     """
     Main class for the program
     """
-    def __init__(self, username, password, year=None, month=None, day=None, form_data=[], browser="Firefox"):
-        self.username = username
-        self.password = password
+    def __init__(self, username=None, password=None, year=None, month=None, day=None, form_data=[], browser="Firefox"):
+        if username:
+            self.username = username
+
+        if password:
+            self.password = password
 
         self.date = dict()
         if year:
@@ -46,8 +50,21 @@ class AutoQbid:
     def __del__(self):
         self.driver.close()
 
-    def login(self):
-        pass
+    def login(self, username=None, password=None):
+        """
+        Login to Qbid
+        """
+        if username:
+            self.username = username
+
+        if password:
+            self.password = password
+
+        username_input = self.driver.find_element_by_id("username")
+        password_input = self.driver.find_element_by_id("password")
+        username_input.send_keys(self.username)
+        password_input.send_keys(self.password)
+        password_input.send_keys(Keys.RETURN)
 
     def move_to_month(self):
         pass
