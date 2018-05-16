@@ -197,5 +197,27 @@ class AutoQbid:
             home_button = self.driver.find_element_by_id("titleInfo").find_element_by_class_name("ModuleLink")
             home_button.click()
 
-    def fill_day(self):
-        pass
+    def fill_day(self, year=None, month=None, day=None, form_data=None):
+        """
+        Fill a single day
+        """
+        if year:
+            self.date["year"] = year
+
+        if month:
+            self.date["month"] = month
+
+        if day:
+            self.date["day"] = day
+
+        if form_data:
+            self.form_data = []
+            for activity in form_data:
+                self.form_data.append({
+                    "activity_id": activity[0],
+                    "hours": activity[1]
+                })
+
+        self.move_to_month()
+        self.open_day_form()
+        self.fill_activity_log()
