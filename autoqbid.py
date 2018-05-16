@@ -8,7 +8,10 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 from time import sleep
+import sys
+from datetime import datetime
 
 
 class AutoQbid:
@@ -128,8 +131,35 @@ class AutoQbid:
                 month_difference = self.date["month"] - calendar_date["month"]
                 self.driver.execute_script("popupAgenda.shiftAgenda({})".format(month_difference))
 
-    def open_day_form(self):
-        pass
+    def open_day_form(self, day=None):
+        """
+        Select the day and open its form
+        """
+        if day:
+            self.date["day"] = day
+
+        try:
+            day_to_fill = self.driver.find_element_by_id("cellDay{}".format(self.date["day"]))
+            day_to_fill_status = day_to_fill.get_attribute("class")
+
+        except NoSuchElementException:
+            print("Please, make sure that the day you have inserted exists!")
+            sys.exit(1)
+
+        # TODO: Improve this code. Make it again with tries and keeping it DRY
+        if day_to_fill_status == "AgCell":
+            print("Please, select a day that you can fill!")
+            sys.exit(1)
+
+        else:
+            if datetime.strptime("{}/{}/{}".format(self.date["year"], self.date["month"], self.date["day"]), "%Y/%m/%d") > datetime.now():
+                print("Sorry, you can't fill days that are from the future!")
+
+            else:
+                self.driver.execute_script("popupAgenda.moveAgenda('{}', '{}', '{}', true)".format(self.date["year"], self.date["month"], self.date["day"]))
+                sleep(0.1)
+                activity_log_url = self.driver.find_element_by_xpath("//*[contains(text(), 'Activitat diària del dossier ')]")
+                activity_log_url.click()
 
     def fill_activity_log(self):
         pass
