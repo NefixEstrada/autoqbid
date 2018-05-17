@@ -161,8 +161,11 @@ class AutoQbid:
 
             else:
                 self.driver.execute_script("popupAgenda.moveAgenda('{}', '{}', '{}', true)".format(self.date["year"], self.date["month"], self.date["day"]))
+
                 sleep(0.1)
-                activity_log_url = self.driver.find_element_by_xpath("//*[contains(text(), 'Activitat diària del dossier ')]")
+                activity_log_url = WebDriverWait(self.driver, 1).until(
+                    ec.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Activitat diària del dossier ')]"))
+                )
                 activity_log_url.click()
 
     def fill_activity_log(self, form_data=None):
