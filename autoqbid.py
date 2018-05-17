@@ -52,11 +52,15 @@ class AutoQbid:
             self.driver.get("https://www.empresaiformacio.org/sBidAlumne/")
             self.driver.switch_to.frame(1)
 
-        except Exception:
-            pass
+        except Exception as e:
+            print(e)
 
     def __del__(self):
-        self.driver.close()
+        try:
+            self.driver.close()
+
+        except AttributeError:
+            pass
 
     def login(self, username=None, password=None):
         """
