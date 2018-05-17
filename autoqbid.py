@@ -12,6 +12,7 @@ from selenium.common.exceptions import NoSuchElementException
 from time import sleep
 import sys
 from datetime import datetime
+from tabulate import tabulate
 
 
 class AutoQbid:
@@ -203,6 +204,57 @@ class AutoQbid:
 
             home_button = self.driver.find_element_by_id("titleInfo").find_element_by_class_name("ModuleLink")
             home_button.click()
+
+    def list_activites(self):
+        """
+        Prints a list of activities_ids and their name
+        """
+        now = datetime.now()
+        self.date["year"] = int(now.strftime("%Y"))
+        self.date["month"] = int(now.strftime("%m"))
+        self.date["day"] = int(now.strftime("%d"))
+
+        self.move_to_month()
+        self.open_day_form()
+
+        try:
+            WebDriverWait(self.driver, 10).until(
+                ec.presence_of_element_located((By.ID, "observacionsInutilsAlumneMaiOmplira"))
+            )
+
+        finally:
+            activities = []
+            for activity in self.driver.find_elements_by_class_name("activitatDiaria"):
+                try:
+                    activity_description = activity.find_element_by_class_name("activitatInfo").find_element_by_tag_name("label").text
+
+                    # Add a line break every 120 characters to make the table fill in a terminal
+                    activity_description = "\n".join([activity_description[i:i + 120] for i in range(0, len(activity_description), 120)])
+
+                    activity_id = "\033[1m\033[93m" + activity.get_attribute("id").replace("activitat", "") + "\033[0m\033[0m"
+
+                except NoSuchElementException:
+                    pass
+
+                else:
+                    try:
+                        activity.find_element_by_class_name("activitatHores")
+                        activities.append([
+                            activity_description,
+                            activity_id
+                        ])
+
+                    except NoSuchElementException:
+                        pass
+
+        print(tabulate(activities, ("Description", "Activity ID"), tablefmt="fancy_grid"))
+
+        self.driver.switch_to.default_content()
+        self.driver.switch_to.frame(1)
+
+        home_button = self.driver.find_element_by_id("titleInfo").find_element_by_class_name("ModuleLink")
+        home_button.click()
+
 
     def fill_day(self, year=None, month=None, day=None, form_data=None):
         """
