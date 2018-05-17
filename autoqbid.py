@@ -169,6 +169,13 @@ class AutoQbid:
                 )
                 activity_log_url.click()
 
+    def close_day_form(self):
+        self.driver.switch_to.default_content()
+        self.driver.switch_to.frame(1)
+
+        home_button = self.driver.find_element_by_id("titleInfo").find_element_by_class_name("ModuleLink")
+        home_button.click()
+
     def fill_activity_log(self, form_data=None):
         """
         Fill the activity log form
@@ -198,12 +205,7 @@ class AutoQbid:
 
             save_button = self.driver.find_element_by_xpath("//*[@title='Emmagatzemar activitat diària']")
             save_button.click()
-
-            self.driver.switch_to.default_content()
-            self.driver.switch_to.frame(1)
-
-            home_button = self.driver.find_element_by_id("titleInfo").find_element_by_class_name("ModuleLink")
-            home_button.click()
+            self.close_day_form()
 
     def list_activites(self):
         """
@@ -248,13 +250,7 @@ class AutoQbid:
                         pass
 
         print(tabulate(activities, ("Description", "Activity ID"), tablefmt="fancy_grid"))
-
-        self.driver.switch_to.default_content()
-        self.driver.switch_to.frame(1)
-
-        home_button = self.driver.find_element_by_id("titleInfo").find_element_by_class_name("ModuleLink")
-        home_button.click()
-
+        self.close_day_form()
 
     def fill_day(self, year=None, month=None, day=None, form_data=None):
         """
