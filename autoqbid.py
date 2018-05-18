@@ -11,7 +11,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 from time import sleep
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from tabulate import tabulate
 
 
@@ -252,18 +252,15 @@ class AutoQbid:
         print(tabulate(activities, ("Description", "Activity ID"), tablefmt="fancy_grid"))
         self.close_day_form()
 
-    def fill_day(self, year=None, month=None, day=None, form_data=None):
+    def fill_day(self, date=None, form_data=None):
         """
         Fill a single day
         """
-        if year:
-            self.date["year"] = year
-
-        if month:
-            self.date["month"] = month
-
-        if day:
-            self.date["day"] = day
+        if date:
+            date = datetime.strptime(date, "%Y/%m/%d")
+            self.date["year"] = date.year
+            self.date["month"] = date.month
+            self.date["day"] = date.day
 
         if form_data:
             self.form_data = []
@@ -276,3 +273,22 @@ class AutoQbid:
         self.move_to_month()
         self.open_day_form()
         self.fill_activity_log()
+
+    def fill_days(self, start_date, end_date, form_data, different_data_every_day=False):
+        start_date = datetime.strptime(start_date, "%Y/%m/%d")
+        end_date = datetime.strptime(end_date, "%Y/%m/%d")
+        days_difference = end_date - start_date
+
+        for i in range(days_difference.days + 1):
+            day = start_date + timedelta(days=i)
+            if not different_data_every_day:
+                day_form_data = form_data
+
+            else:
+                if len(form_data) == days_difference.days:
+                    day_form_data = form_data[i]
+                else:
+                    print("Please, introduce data for every day or don't use different data every day!")
+                    sys.exit(1)
+
+            self.fill_day(day.strftime("%Y/%m/%d"), day_form_data)
