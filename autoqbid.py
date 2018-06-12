@@ -42,7 +42,14 @@ class AutoQbid:
         } for activity in form_data]
 
         try:
-            self.driver = getattr(webdriver, browser)()
+            if browser == "Headless":
+                options = webdriver.ChromeOptions()
+                options.add_argument('headless')
+
+                self.driver = webdriver.Chrome(chrome_options=options)
+
+            else:
+                self.driver = getattr(webdriver, browser)()
 
             try:
                 self.driver.maximize_window()
@@ -136,7 +143,7 @@ class AutoQbid:
                 month_difference = self.date["month"] - calendar_date["month"]
                 self.driver.execute_script("popupAgenda.shiftAgenda({})".format(month_difference))
 
-    def open_day_form(self, day=None):
+    def open_day_form(self, day=None, ignore_day_errors=False):
         """
         Select the day and open its form
         """
@@ -152,13 +159,24 @@ class AutoQbid:
             sys.exit(1)
 
         # TODO: Improve this code. Make it again with tries and keeping it DRY
-        if day_to_fill_status == "AgCell":
-            print("Please, select a day that you can fill!")
-            sys.exit(1)
+        if day_to_fill_status == "AgCell" or day_to_fill_status == "AgCellFestaF":
+            if not ignore_day_errors:
+                print("Please, select a day that you can fill!")
+                sys.exit(1)
+
+            else:
+                print("Unable to fill {}/{}/{}!".format(self.date["year"], self.date["month"], self.date["day"]))
+                return False
 
         else:
             if datetime.strptime("{}/{}/{}".format(self.date["year"], self.date["month"], self.date["day"]), "%Y/%m/%d") > datetime.now():
-                print("Sorry, you can't fill days that are from the future!")
+                if not ignore_day_errors:
+                    print("Sorry, you can't fill days that are from the future!")
+                    sys.exit(1)
+
+                else:
+                    print("Unable to fill {}/{}/{}!".format(self.date["year"], self.date["month"], self.date["day"]))
+                    return False
 
             else:
                 self.driver.execute_script("popupAgenda.moveAgenda('{}', '{}', '{}', true)".format(self.date["year"], self.date["month"], self.date["day"]))
@@ -168,6 +186,8 @@ class AutoQbid:
                     ec.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Activitat diària del dossier ')]"))
                 )
                 activity_log_url.click()
+
+                return True
 
     def close_day_form(self):
         self.driver.switch_to.default_content()
@@ -252,7 +272,7 @@ class AutoQbid:
         print(tabulate(activities, ("Description", "Activity ID"), tablefmt="fancy_grid"))
         self.close_day_form()
 
-    def fill_day(self, date=None, form_data=None):
+    def fill_day(self, date=None, form_data=None, ignore_day_errors=False):
         """
         Fill a single day
         """
@@ -271,10 +291,14 @@ class AutoQbid:
                 })
 
         self.move_to_month()
-        self.open_day_form()
-        self.fill_activity_log()
+        day_opened = self.open_day_form(ignore_day_errors=ignore_day_errors)
+        if day_opened:
+            self.fill_activity_log()
 
     def fill_days(self, start_date, end_date, form_data, different_data_every_day=False):
+        """
+        Fill a range of days
+        """
         start_date = datetime.strptime(start_date, "%Y/%m/%d")
         end_date = datetime.strptime(end_date, "%Y/%m/%d")
         days_difference = end_date - start_date
@@ -285,10 +309,15 @@ class AutoQbid:
                 day_form_data = form_data
 
             else:
-                if len(form_data) == days_difference.days:
-                    day_form_data = form_data[i]
-                else:
-                    print("Please, introduce data for every day or don't use different data every day!")
-                    sys.exit(1)
+                try:
+                    day_form_data = form_data[day.day]
 
-            self.fill_day(day.strftime("%Y/%m/%d"), day_form_data)
+                except KeyError:
+                    try:
+                        day_form_data = form_data["default"]
+
+                    except KeyError:
+                        print("Please, add a 'default' key!")
+                        sys.exit(1)
+
+            self.fill_day(day.strftime("%Y/%m/%d"), day_form_data, True)

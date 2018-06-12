@@ -35,34 +35,20 @@ form_data = [
     ["Activity1ID", "HOURS"],
     ["Activity2ID", "HOURS"]
 ]
-qbid.fill_day(2018, 5, 18, form_data)
+qbid.fill_day("2018/5/19", form_data)
 
 
 # Fill a whole week with the same data
-week_start = 7
-week_end_plus_one = 12 # Friday is 11, but you need to add 1 more number (more info, range() Python function)
-
 form_data = [
     ["Activity1ID", "HOURS"],
     ["Activity2ID", "HOURS"]
 ]
-
-for day in range(week_start, week_end_plus_one):
-    qbid.fill_day(2018, 5, day, form_data)
-
+qbid.fill_days("2018/5/7", "2018/5/11", form_data)
 
 # Fill a whole week with specific data for each day
-week_start = 7
-week_end_plus_one = 12 # Friday is 11, but you need to add 1 more number (more info, range() Python function)
-
 form_data = {
-    7: [
-        ["Activity1ID", "HOURS"],
-        ["Activity2ID", "HOURS"]
-    ],
-    8: [
-        ["Activity1ID", "HOURS"],
-        ["Activity2ID", "HOURS"]
+    "default": [
+        ["Activity1ID", "HOURS"]
     ],
     9: [
         ["Activity1ID", "HOURS"],
@@ -71,15 +57,9 @@ form_data = {
     10: [
         ["Activity1ID", "HOURS"],
         ["Activity2ID", "HOURS"]
-    ],
-    11: [
-        ["Activity1ID", "HOURS"],
-        ["Activity2ID", "HOURS"]
     ]
 }
-
-for day in range(week_start, week_end_plus_one):
-    qbid.fill_day(2018, 5, day, form_data[day])
+qbid.fill_days("2018/5/7", "2018/5/11", form_data, different_data_every_day=True)
 
 
 # And more! Use your imagination! Extend the class and make a pull request!
