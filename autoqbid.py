@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# Imports
-from selenium import webdriver
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as ec
-from selenium.webdriver.common.by import By
-from selenium.common.exceptions import TimeoutException
-from selenium.common.exceptions import NoSuchElementException
-from time import sleep
 import sys
 from datetime import datetime, timedelta
+from time import sleep
+
+# Imports
+from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException, TimeoutException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as ec
+from selenium.webdriver.support.ui import WebDriverWait
 from tabulate import tabulate
 
 
@@ -19,7 +19,17 @@ class AutoQbid:
     """
     Main class for the program
     """
-    def __init__(self, username=None, password=None, year=None, month=None, day=None, form_data=[], browser="Firefox"):
+
+    def __init__(
+        self,
+        username=None,
+        password=None,
+        year=None,
+        month=None,
+        day=None,
+        form_data=[],
+        browser="Firefox",
+    ):
         if username:
             self.username = username
 
@@ -36,15 +46,14 @@ class AutoQbid:
         if day:
             self.date["day"] = day
 
-        self.form_data = [{
-            "activity_id": activity[0],
-            "hours": activity[1]
-        } for activity in form_data]
+        self.form_data = [
+            {"activity_id": activity[0], "hours": activity[1]} for activity in form_data
+        ]
 
         try:
             if browser == "Headless":
                 options = webdriver.ChromeOptions()
-                options.add_argument('headless')
+                options.add_argument("headless")
 
                 self.driver = webdriver.Chrome(chrome_options=options)
 
@@ -108,7 +117,7 @@ class AutoQbid:
             "setembre": 9,
             "octubre": 10,
             "novembre": 11,
-            "desembre": 12
+            "desembre": 12,
         }
 
         try:
@@ -127,21 +136,29 @@ class AutoQbid:
                 pass
 
         finally:
-            calendar_date_array = self.driver.find_element_by_id("popupAgenda_calHeader0").text.split(" ")
-            calendar_date = dict({
-                "year": int(calendar_date_array[1]),
-                "month": int(months[calendar_date_array[0].lower()])
-            })
+            calendar_date_array = self.driver.find_element_by_id(
+                "popupAgenda_calHeader0"
+            ).text.split(" ")
+            calendar_date = dict(
+                {
+                    "year": int(calendar_date_array[1]),
+                    "month": int(months[calendar_date_array[0].lower()]),
+                }
+            )
 
             if not self.date["year"] == calendar_date["year"]:
                 sleep(0.3)
                 year_difference = self.date["year"] - calendar_date["year"]
-                self.driver.execute_script("popupAgenda.shiftAgenda({})".format(year_difference * 12))
+                self.driver.execute_script(
+                    "popupAgenda.shiftAgenda({})".format(year_difference * 12)
+                )
 
             if not self.date["month"] == calendar_date["month"]:
                 sleep(0.3)
                 month_difference = self.date["month"] - calendar_date["month"]
-                self.driver.execute_script("popupAgenda.shiftAgenda({})".format(month_difference))
+                self.driver.execute_script(
+                    "popupAgenda.shiftAgenda({})".format(month_difference)
+                )
 
     def open_day_form(self, day=None, ignore_day_errors=False):
         """
@@ -151,7 +168,9 @@ class AutoQbid:
             self.date["day"] = day
 
         try:
-            day_to_fill = self.driver.find_element_by_id("cellDay{}".format(self.date["day"]))
+            day_to_fill = self.driver.find_element_by_id(
+                "cellDay{}".format(self.date["day"])
+            )
             day_to_fill_status = day_to_fill.get_attribute("class")
 
         except NoSuchElementException:
@@ -165,25 +184,50 @@ class AutoQbid:
                 sys.exit(1)
 
             else:
-                print("Unable to fill {}/{}/{}!".format(self.date["year"], self.date["month"], self.date["day"]))
+                print(
+                    "Unable to fill {}/{}/{}!".format(
+                        self.date["year"], self.date["month"], self.date["day"]
+                    )
+                )
                 return False
 
         else:
-            if datetime.strptime("{}/{}/{}".format(self.date["year"], self.date["month"], self.date["day"]), "%Y/%m/%d") > datetime.now():
+            if (
+                datetime.strptime(
+                    "{}/{}/{}".format(
+                        self.date["year"], self.date["month"], self.date["day"]
+                    ),
+                    "%Y/%m/%d",
+                )
+                > datetime.now()
+            ):
                 if not ignore_day_errors:
                     print("Sorry, you can't fill days that are from the future!")
                     sys.exit(1)
 
                 else:
-                    print("Unable to fill {}/{}/{}!".format(self.date["year"], self.date["month"], self.date["day"]))
+                    print(
+                        "Unable to fill {}/{}/{}!".format(
+                            self.date["year"], self.date["month"], self.date["day"]
+                        )
+                    )
                     return False
 
             else:
-                self.driver.execute_script("popupAgenda.moveAgenda('{}', '{}', '{}', true)".format(self.date["year"], self.date["month"], self.date["day"]))
+                self.driver.execute_script(
+                    "popupAgenda.moveAgenda('{}', '{}', '{}', true)".format(
+                        self.date["year"], self.date["month"], self.date["day"]
+                    )
+                )
 
                 sleep(0.1)
                 activity_log_url = WebDriverWait(self.driver, 1).until(
-                    ec.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Activitat diària del dossier ')]"))
+                    ec.presence_of_element_located(
+                        (
+                            By.XPATH,
+                            "//*[contains(text(), 'Activitat diària del dossier ')]",
+                        )
+                    )
                 )
                 activity_log_url.click()
 
@@ -193,7 +237,9 @@ class AutoQbid:
         self.driver.switch_to.default_content()
         self.driver.switch_to.frame(1)
 
-        home_button = self.driver.find_element_by_id("titleInfo").find_element_by_class_name("ModuleLink")
+        home_button = self.driver.find_element_by_id(
+            "titleInfo"
+        ).find_element_by_class_name("ModuleLink")
         home_button.click()
 
     def fill_activity_log(self, form_data=None):
@@ -203,28 +249,39 @@ class AutoQbid:
         if form_data:
             self.form_data = []
             for activity in form_data:
-                self.form_data.append({
-                    "activity_id": activity[0],
-                    "hours": activity[1]
-                })
+                self.form_data.append(
+                    {"activity_id": activity[0], "hours": activity[1]}
+                )
 
         try:
             WebDriverWait(self.driver, 10).until(
-                ec.presence_of_element_located((By.ID, "observacionsInutilsAlumneMaiOmplira"))
+                ec.presence_of_element_located(
+                    (By.ID, "observacionsInutilsAlumneMaiOmplira")
+                )
             )
 
         finally:
-            options_to_clean = self.driver.find_elements_by_xpath("//option[@value='0']")
+            options_to_clean = self.driver.find_elements_by_xpath(
+                "//option[@value='0']"
+            )
             for option in options_to_clean:
                 option.click()
 
             for activity in self.form_data:
-                select = self.driver.find_element_by_id("inp_" + activity["activity_id"])
-                option_to_click = select.find_element_by_xpath("./option[@value='{}']".format(activity["hours"]))
+                select = self.driver.find_element_by_id(
+                    "inp_" + activity["activity_id"]
+                )
+                option_to_click = select.find_element_by_xpath(
+                    "./option[@value='{}']".format(activity["hours"])
+                )
                 option_to_click.click()
 
-            save_button = self.driver.find_element_by_xpath("//*[@title='Emmagatzemar activitat diària']")
+            save_button = self.driver.find_element_by_xpath(
+                "//*[@title='Emmagatzemar activitat diària']"
+            )
             save_button.click()
+            sleep(1)
+
             self.close_day_form()
 
     def list_activites(self):
@@ -241,19 +298,34 @@ class AutoQbid:
 
         try:
             WebDriverWait(self.driver, 10).until(
-                ec.presence_of_element_located((By.ID, "observacionsInutilsAlumneMaiOmplira"))
+                ec.presence_of_element_located(
+                    (By.ID, "observacionsInutilsAlumneMaiOmplira")
+                )
             )
 
         finally:
             activities = []
             for activity in self.driver.find_elements_by_class_name("activitatDiaria"):
                 try:
-                    activity_description = activity.find_element_by_class_name("activitatInfo").find_element_by_tag_name("label").text
+                    activity_description = (
+                        activity.find_element_by_class_name("activitatInfo")
+                        .find_element_by_tag_name("label")
+                        .text
+                    )
 
                     # Add a line break every 120 characters to make the table fill in a terminal
-                    activity_description = "\n".join([activity_description[i:i + 120] for i in range(0, len(activity_description), 120)])
+                    activity_description = "\n".join(
+                        [
+                            activity_description[i : i + 120]
+                            for i in range(0, len(activity_description), 120)
+                        ]
+                    )
 
-                    activity_id = "\033[1m\033[93m" + activity.get_attribute("id").replace("activitat", "") + "\033[0m\033[0m"
+                    activity_id = (
+                        "\033[1m\033[93m"
+                        + activity.get_attribute("id").replace("activitat", "")
+                        + "\033[0m\033[0m"
+                    )
 
                 except NoSuchElementException:
                     pass
@@ -261,15 +333,14 @@ class AutoQbid:
                 else:
                     try:
                         activity.find_element_by_class_name("activitatHores")
-                        activities.append([
-                            activity_description,
-                            activity_id
-                        ])
+                        activities.append([activity_description, activity_id])
 
                     except NoSuchElementException:
                         pass
 
-        print(tabulate(activities, ("Description", "Activity ID"), tablefmt="fancy_grid"))
+        print(
+            tabulate(activities, ("Description", "Activity ID"), tablefmt="fancy_grid")
+        )
         self.close_day_form()
 
     def fill_day(self, date=None, form_data=None, ignore_day_errors=False):
@@ -285,17 +356,21 @@ class AutoQbid:
         if form_data:
             self.form_data = []
             for activity in form_data:
-                self.form_data.append({
-                    "activity_id": activity[0],
-                    "hours": activity[1]
-                })
+                self.form_data.append(
+                    {"activity_id": activity[0], "hours": activity[1]}
+                )
 
         self.move_to_month()
+
+        sleep(0.2)
+
         day_opened = self.open_day_form(ignore_day_errors=ignore_day_errors)
         if day_opened:
             self.fill_activity_log()
 
-    def fill_days(self, start_date, end_date, form_data, different_data_every_day=False):
+    def fill_days(
+        self, start_date, end_date, form_data, different_data_every_day=False
+    ):
         """
         Fill a range of days
         """
