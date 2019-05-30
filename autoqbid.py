@@ -221,16 +221,26 @@ class AutoQbid:
                 )
 
                 sleep(0.1)
-                activity_log_url = WebDriverWait(self.driver, 1).until(
-                    ec.presence_of_element_located(
-                        (
-                            By.XPATH,
-                            "//*[contains(text(), 'Activitat diària del dossier ')]",
+
+                try:
+                    activity_log_url = WebDriverWait(self.driver, 1).until(
+                        ec.presence_of_element_located(
+                            (
+                                By.XPATH,
+                                "//*[contains(text(), 'Activitat diària del dossier ')]",
+                            )
                         )
                     )
-                )
-                activity_log_url.click()
 
+                except TimeoutException:
+                    print(
+                        "Unable to fill {}/{}/{}!".format(
+                            self.date["year"], self.date["month"], self.date["day"]
+                        )
+                    )
+                    return False
+
+                activity_log_url.click()
                 return True
 
     def close_day_form(self):
@@ -275,6 +285,8 @@ class AutoQbid:
                     "./option[@value='{}']".format(activity["hours"])
                 )
                 option_to_click.click()
+
+            sleep(0.5)
 
             save_button = self.driver.find_element_by_xpath(
                 "//*[@title='Emmagatzemar activitat diària']"
